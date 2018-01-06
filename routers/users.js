@@ -7,15 +7,16 @@ const router = express.Router();
 const UserModel = require("../modules/dataBase/user.js");
 
 // Retrieve the user record
-router.get("/:username", (req, res) => {
+router.get("/:username", async (req, res) => {
   let condition = { username: req.params.username };
 
-  UserModel
-    .getByCondition(condition)
-    .then(obj => res.send(`Your name is ${obj.name}, ok?`))
-    .catch(err =>
-      res.send(`The username ${req.params.username} does not exists`)
-    );
+  try{
+    let obj = await UserModel.getByCondition(condition);
+    res.send(`Your name is ${obj.name}, ok?`)
+  } catch (err) {
+    res.send(`The username ${req.params.username} does not exists`)
+  }
+
 });
 
 // Register a new user
@@ -32,6 +33,7 @@ router.post("/", (req, res) => {
 
 // Edit the user profile
 router.put("/", (req, res) => {
+
   let condition = {
     username: req.body.username
   };
@@ -42,11 +44,14 @@ router.put("/", (req, res) => {
     id: req.body.id
   };
 
+  // update and return the user object after updated
   UserModel
-    .updateByCondition(condition, update, null)
+    .updateByCondition(condition, update, {new: true})
     .then(
-      () => res.json({ success: true, msg: "Updated user" }),
-      err => res.json({ success: false, msg: "Failed to update user" })
+      (obj) => {
+        res.json({ success: true, msg: "Updated user" });
+      },
+        err => res.json({ success: false, msg: "Failed to update user" })
     );
 });
 
